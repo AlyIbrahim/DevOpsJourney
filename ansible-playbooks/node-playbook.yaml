@@ -1,5 +1,4 @@
-- hosts: master
-  connection: local
+- hosts: all
   tasks:
     - name: ensure nodejs is at the latest version
       yum: name=nodejs state=latest

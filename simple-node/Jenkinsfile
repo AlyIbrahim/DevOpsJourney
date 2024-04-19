@@ -1,5 +1,6 @@
 pipeline {
-    agent { node { label 'nodejs' } }
+    // agent { node { label 'nodejs' } }
+    agent any
 
     stages {
         stage('Checkout'){
@@ -30,7 +31,7 @@ pipeline {
         }
         stage('Upload') {
             steps {
-               ansibleAdhoc credentialsId: 'e265ee79-8103-4b75-92a9-5573336829f3', inventoryContent: '[web]\n<IP>]', hosts: 'web', module: 'copy', moduleArguments: 'src=app.zip dest=/home/ansible/build/app.zip'
+               ansibleAdhoc credentialsId: 'e265ee79-8103-4b75-92a9-5573336829f3', inventoryContent: '[web]\n<IP>\n]', hosts: 'web', module: 'copy', moduleArguments: 'src=app.zip dest=/home/ansible/build/app.zip'
             }
         }
          stage('Upload to S3') {
@@ -43,8 +44,9 @@ pipeline {
         }                
         stage('Deploy App with Ansible') {
             steps {
-                ansiblePlaybook become: false, becomeUser: 'ansible', credentialsId: '9fc310ea-3f21-4c71-ba5a-8f32e967fd87', inventory: 'ansible/inventory.cfg', limit: 'web', playbook: 'ansible/deploy-playbook.yaml', vaultTmpPath: ''
+                ansiblePlaybook become: false, becomeUser: 'ansible', credentialsId: '9fc310ea-3f21-4c71-ba5a-8f32e967fd87', inventory: 'ansible-playbooks/inventory.cfg', limit: 'web', playbook: 'ansible-playbooks/deploy-playbook.yaml', vaultTmpPath: ''
             }
         }
+    }
 
 }

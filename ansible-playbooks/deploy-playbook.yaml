@@ -1,6 +1,6 @@
 ---
-hosts: web
-tasks:
+- hosts: web
+  tasks:
   - name: Unzip the deployment package
     unarchive:
       src: /home/ansible/build/app.zip
