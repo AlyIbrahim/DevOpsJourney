@@ -1,0 +1,35 @@
+- hosts: master
+  connection: local
+  tasks:
+  - name: Download Jenkins Repo
+    ansible.builtin.get_url:
+      url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
+      dest: /etc/yum.repos.d/jenkins.repo
+      mode: '0440'
+  - name: Install Jenkins Repo Key
+    ansible.builtin.rpm_key:
+      state: present
+      key: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+  - name: Install Java
+    yum:
+      name: java-17-amazon-corretto
+      state: latest
+  - name: Increase /tmp
+    ansible.posix.mount:
+      path: /tmp
+      opts: "size=4G"
+      state: remounted
+  - name: Install Jenkins
+    yum:
+      name: jenkins
+      state: latest
+  - name: Start Jenkins
+    service:
+      name: jenkins
+      state: started
+  - name: Get Default Admin Password
+    shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+    register: jenkins_admin_password
+  - name: Print Jenkins Default Admin Password
+    debug:
+      msg: "The default Jenkins password is {{ jenkins_admin_password.stdout }}"

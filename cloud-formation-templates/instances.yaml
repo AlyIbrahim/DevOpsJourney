@@ -1,0 +1,132 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys two EC2 instances with Amazon Linux 2023 and security group
+
+Parameters:
+  JenkinsKey:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+
+Resources:
+
+  # IAM Policy for CloudFormation Access
+  JenkinsCloudFormationPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'cloudformation:CreateStack'
+              - 'cloudformation:DeleteStack'
+              - 'cloudformation:DescribeStacks'
+              - 'cloudformation:UpdateStack'
+            Resource: '*'
+
+  # IAM Role for the EC2 instances
+  JenkinsEC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
+        - arn:aws:iam::aws:policy/AWSCodeDeployFullAccess
+        - !Ref JenkinsCloudFormationPolicy
+      Tags:
+        - Key: Name
+          Value: JenkinsEC2Role
+
+  # IAM Instance Profile
+  JenkinsEC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: JenkinsEC2Role
+      Roles:
+        - !Ref JenkinsEC2Role
+
+  # EC2 instance 1 (Master)
+  Master:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0663b059c6536cac8 # Amazon Linux 2023
+      InstanceType: t2.micro
+      KeyName: !Ref JenkinsKey
+      IamInstanceProfile: !Ref JenkinsEC2InstanceProfile
+      SecurityGroupIds:
+        - !Ref JenkinsSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 16
+            VolumeType: gp3
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          dnf install ansible -y
+      Tags:
+        - Key: Name
+          Value: Master
+
+  # EC2 instance 2 (Web)
+  Web:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0663b059c6536cac8 # Amazon Linux 2023
+      InstanceType: t2.micro
+      KeyName: !Ref JenkinsKey
+      SecurityGroupIds:
+        - !Ref JenkinsSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 8
+            VolumeType: gp3
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          useradd -m -s /bin/bash ansible
+          echo "ansible:ansible" | chpasswd
+          echo "ansible ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/ansible
+          sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          service sshd restart
+      Tags:
+        - Key: Name
+          Value: Web
+
+  # Security Group
+  JenkinsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows HTTP, HTTPS, and SSH
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: Jenkins Security Group
+
+Outputs:
+  MasterID:
+    Description: ID of the Master EC2 instance
+    Value: !Ref Master
+  WebID:
+    Description: ID of the Web EC2 instance
+    Value: !Ref Web

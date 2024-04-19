@@ -1,0 +1,18 @@
+---
+hosts: web
+tasks:
+  - name: Unzip the deployment package
+    unarchive:
+      src: /home/ansible/build/app.zip
+      dest: /home/ansible/app
+      remote_src: yes
+  - name: Start the nodejs app
+    command:
+      chdir: /home/ansible/app
+      cmd: npm start
+    async: 1000
+    poll: 0
+  - name: Ensure app is running  
+    shell: ps aux | grep node
+    register: app_status
+  - debug: msg={{app_status.stdout_lines}}

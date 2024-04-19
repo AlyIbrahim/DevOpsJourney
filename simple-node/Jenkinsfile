@@ -1,0 +1,50 @@
+pipeline {
+    agent { node { label 'nodejs' } }
+
+    stages {
+        stage('Checkout'){
+            steps{
+                echo "Cloning .."
+                git url: "https://github.com/AlyIbrahim/DigitalCloudDevOps", branch: "main"
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                echo 'Building..'
+                dir('simple-node'){
+                sh "pwd"
+                sh "npm install"
+            }
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing..'
+            }
+        }
+        stage('Package') {
+            steps {
+               sh "zip -r app.zip ." 
+            }
+        }
+        stage('Upload') {
+            steps {
+               ansibleAdhoc credentialsId: 'e265ee79-8103-4b75-92a9-5573336829f3', inventoryContent: '[web]\n<IP>]', hosts: 'web', module: 'copy', moduleArguments: 'src=app.zip dest=/home/ansible/build/app.zip'
+            }
+        }
+         stage('Upload to S3') {
+            steps {
+                script {
+                    // s3Upload(bucket: 'e', file: '*')
+                    s3Upload consoleLogLevel: 'INFO', dontSetBuildResultOnFailure: false, dontWaitForConcurrentBuildCompletion: false, entries: [[bucket: 'BucketName/Prefix', excludedFile: '', flatten: false, gzipFiles: true, keepForever: false, managedArtifacts: false, noUploadOnFailure: false, selectedRegion: 'us-west-2', showDirectlyInBrowser: false, sourceFile: '*', storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE', profileName: 's3fromec2', userMetadata: []
+                }
+            }
+        }                
+        stage('Deploy App with Ansible') {
+            steps {
+                ansiblePlaybook become: false, becomeUser: 'ansible', credentialsId: '9fc310ea-3f21-4c71-ba5a-8f32e967fd87', inventory: 'ansible/inventory.cfg', limit: 'web', playbook: 'ansible/deploy-playbook.yaml', vaultTmpPath: ''
+            }
+        }
+
+}

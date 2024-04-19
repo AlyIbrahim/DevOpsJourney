@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CodeDeploy Application, Deployment Group, and S3 Bucket
+
+Resources:
+
+  SimpleNodeS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: digital-cloud-devops-01
+
+  CodeDeployApplication:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ComputePlatform: Server
+      ApplicationName: SimpleNode
+
+  CodeDeployDeploymentGroup:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties:
+      ApplicationName: !Ref CodeDeployApplication
+      DeploymentGroupName: GroupOne
+      ServiceRoleArn: !GetAtt CodeDeployRole.Arn
+      Tags:
+        - Key: Name
+          Value: Web
+
+  CodeDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codedeploy.amazonaws.com
+            Action: "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole
+
+Outputs:
+  CodeDeployApplicationName:
+    Description: Name of the CodeDeploy Application
+    Value: !Ref CodeDeployApplication
+  CodeDeployDeploymentGroupName:
+    Description: Name of the CodeDeploy Deployment Group
+    Value: !Ref CodeDeployDeploymentGroup
+  SimpleNodeS3BucketName:
+    Description: Name of the S3 Bucket
+    Value: !Ref SimpleNodeS3Bucket
