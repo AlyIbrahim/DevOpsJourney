@@ -1,6 +1,10 @@
 ---
 - hosts: web
   tasks:
+  - name: Create app directory if not found
+    file:
+      path: /home/ansible/app
+      state: directory
   - name: Unzip the deployment package
     unarchive:
       src: /home/ansible/build/app.zip
