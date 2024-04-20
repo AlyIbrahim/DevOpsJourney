@@ -17,6 +17,6 @@
     async: 1000
     poll: 0
   - name: Ensure app is running  
-    shell: ps aux | grep node
+    shell: ps aux | grep npm
     register: app_status
   - debug: msg={{app_status.stdout_lines}}

@@ -7,6 +7,17 @@ pipeline {
         ANSIBLE_CREDENTIALS_ID = "ADD_YOUR_CREDENTIALS_ID"
     }
 
+ pipeline {
+    // agent { node { label 'nodejs' } }
+    agent any
+
+    environment {
+        WEB_INSTANCE_IP = "ADD_YOUR_WEB_INSTANCE_IP"
+        ANSIBLE_CREDENTIALS_ID = "ADD_YOUR_CREDENTIALS_ID"
+        BUCKET_NAME = "ENTER_YOUR_BUCKET_NAME/"
+        PREFIX = "build/"
+    }
+
     stages {
         stage('Checkout'){
             steps{
@@ -31,7 +42,12 @@ pipeline {
         }
         stage('Package') {
             steps {
-               sh "zip -r app.zip ." 
+                sh "rm -rf app.zip"
+                dir('simple-node'){
+                    sh "zip -r ../app.zip ."
+                }
+                sh "ls"
+                
             }
         }
         stage('Upload') {
@@ -44,15 +60,16 @@ pipeline {
             steps {
                 script {
                     // s3Upload(bucket: 'e', file: '*')
-                    s3Upload consoleLogLevel: 'INFO', dontSetBuildResultOnFailure: false, dontWaitForConcurrentBuildCompletion: false, entries: [[bucket: 'BucketName/Prefix', excludedFile: '', flatten: false, gzipFiles: true, keepForever: false, managedArtifacts: false, noUploadOnFailure: false, selectedRegion: 'us-west-2', showDirectlyInBrowser: false, sourceFile: '*', storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE', profileName: 's3fromec2', userMetadata: []
+                    s3Upload consoleLogLevel: 'INFO', dontSetBuildResultOnFailure: false, dontWaitForConcurrentBuildCompletion: false, entries: [[bucket: "${BUCKET_NAME}/${PREFIX}", excludedFile: '', flatten: false, gzipFiles: true, keepForever: false, managedArtifacts: false, noUploadOnFailure: false, selectedRegion: 'us-west-2', showDirectlyInBrowser: false, sourceFile: '*', storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE', profileName: 's3fromec2', userMetadata: []
                 }
             }
         }                
         stage('Deploy App with Ansible') {
             steps {
-                ansiblePlaybook become: false, becomeUser: 'ansible', credentialsId: "${ANSIBLE_CREDENTIALS_ID}", inventory: 'ansible-playbooks/inventory.cfg', limit: 'web', playbook: 'ansible-playbooks/deploy-playbook.yaml', vaultTmpPath: ''
+                ansiblePlaybook become: false, becomeUser: 'ansible', credentialsId: "${ANSIBLE_CREDENTIALS_ID}", inventoryContent: "[web]\n${WEB_INSTANCE_IP} ansibel_user=ansible\n", limit: 'web', playbook: 'ansible-playbooks/deploy-playbook.yaml', vaultTmpPath: ''
             }
         }
     }
 
 }
+
