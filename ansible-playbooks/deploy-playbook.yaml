@@ -1,7 +1,11 @@
 ---
 - hosts: web
   tasks:
-  - name: Create app directory if not found
+  - name: Clean Up previous deployment
+    file:
+      path: /home/ansible/app
+      state: absent
+  - name: Create app directory
     file:
       path: /home/ansible/app
       state: directory
