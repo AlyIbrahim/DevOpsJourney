@@ -3,9 +3,9 @@
     agent any
 
     environment {
-        WEB_INSTANCE_IP = "ADD_YOUR_WEB_INSTANCE_IP"
-        ANSIBLE_CREDENTIALS_ID = "ADD_YOUR_CREDENTIALS_ID"
-        BUCKET_NAME = "ENTER_YOUR_BUCKET_NAME/"
+        WEB_INSTANCE_IP = "MY_WEB_INSTANCE_IP"
+        ANSIBLE_CREDENTIALS_ID = "MY_ANSIBLE_CREDENTIALS_ID"
+        BUCKET_NAME = "MY_S3_BUCKET_NAME/"
         PREFIX = "build/"
     }
 
@@ -43,7 +43,7 @@
         }
         stage('Upload') {
             steps {
-                ansibleAdhoc credentialsId: "${ANSIBLE_CREDENTIALS_ID}", inventoryContent: "[web]\n${WEB_INSTANCE_IP} ansibel_user=ansible\n", hosts: 'web', module: 'file', moduleArguments: 'path=/home/ansible/build/ state=directory'
+                ansibleAdhoc credentialsId: "${ANSIBLE_CREDENTIALS_ID}", inventoryContent: "[web]\n${WEB_INSTANCE_IP} ansibel_user=ansible\n", hosts: 'web', module: 'file', moduleArguments: 'path=/home/ansible/build/ state=directory', hostKeyChecking: false
                 ansibleAdhoc credentialsId: "${ANSIBLE_CREDENTIALS_ID}", inventoryContent: "[web]\n${WEB_INSTANCE_IP} ansibel_user=ansible\n", hosts: 'web', module: 'copy', moduleArguments: 'src=app.zip dest=/home/ansible/build/app.zip'
             }
         }
