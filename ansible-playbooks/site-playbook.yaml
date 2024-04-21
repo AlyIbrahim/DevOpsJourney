@@ -1,0 +1,12 @@
+---
+- hosts: web
+  become: yes
+  vars:
+    name: Aly
+    private_ip: "{{ ansible_facts.default_ipv4.address }}"
+    today: "{{ ansible_date_time.weekday }} {{  ansible_date_time.date}}"
+  tasks:
+  - name: Update web page
+    template:
+      src: site.html.j2
+      dest: /usr/share/nginx/html/index.html

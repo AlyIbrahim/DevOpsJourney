@@ -19,10 +19,12 @@ Resources:
     Properties:
       ApplicationName: !Ref CodeDeployApplication
       DeploymentGroupName: GroupOne
-      ServiceRoleArn: !GetAtt CodeDeployRole.Arn
-      Tags:
+      Ec2TagFilters:
         - Key: Name
           Value: Web
+          Type: KEY_AND_VALUE
+      DeploymentConfigName: CodeDeployDefault.OneAtATime
+      ServiceRoleArn: !GetAtt CodeDeployRole.Arn
 
   CodeDeployRole:
     Type: AWS::IAM::Role

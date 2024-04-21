@@ -1,0 +1,10 @@
+---
+- hosts: web
+  tasks:
+  - name: Add files
+    file:
+       dest: "{{ item.path }}"
+       state: touch
+    loop:
+      - path: /home/ansible/test1
+      - path: /home/ansible/test2

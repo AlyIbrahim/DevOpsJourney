@@ -1,4 +1,4 @@
 - hosts: all
   tasks:
-    - name: ensure nodejs is at the latest version
+    - name: Install nodejs latest version
       yum: name=nodejs state=latest
