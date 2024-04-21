@@ -1,6 +1,6 @@
 #!/bin/bash
 ID=`ps -ef | grep npm | grep start | tr -s ' ' | cut -d' ' -f2`
-if [[ "x$ID" -eq "x" ]]
+if [[ "x$ID" == "x" ]]
 then
   echo "Application is not running"
 else
