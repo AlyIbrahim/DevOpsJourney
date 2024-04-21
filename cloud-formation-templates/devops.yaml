@@ -1,12 +1,17 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: CodeDeploy Application, Deployment Group, and S3 Bucket
 
+Parameters:
+  S3BucketName:
+    Type: AWS::S3::Bucket::BucketName
+    Description: Name of your S3 bucket that will be used to save your artifacts
+
 Resources:
 
   SimpleNodeS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: digital-cloud-devops-01
+      BucketName: !Ref S3BucketName
 
   CodeDeployApplication:
     Type: AWS::CodeDeploy::Application

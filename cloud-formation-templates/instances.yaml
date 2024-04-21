@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Deploys two EC2 instances with Amazon Linux 2023 and security group
 
 Parameters:
-  JenkinsKey:
+  InstancesKey:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
 
@@ -58,7 +58,7 @@ Resources:
     Properties:
       ImageId: ami-0663b059c6536cac8 # Amazon Linux 2023
       InstanceType: t2.micro
-      KeyName: !Ref JenkinsKey
+      KeyName: !Ref InstancesKey
       IamInstanceProfile: !Ref JenkinsEC2InstanceProfile
       SecurityGroupIds:
         - !Ref JenkinsSecurityGroup
@@ -81,7 +81,7 @@ Resources:
     Properties:
       ImageId: ami-0663b059c6536cac8 # Amazon Linux 2023
       InstanceType: t2.micro
-      KeyName: !Ref JenkinsKey
+      KeyName: !Ref InstancesKey
       SecurityGroupIds:
         - !Ref JenkinsSecurityGroup
       BlockDeviceMappings:
