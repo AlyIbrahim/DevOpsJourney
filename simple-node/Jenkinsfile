@@ -41,7 +41,7 @@
                 
             }
         }
-        stage('Upload') {
+        stage('Upload to EC2') {
             steps {
                 ansibleAdhoc credentialsId: "${ANSIBLE_CREDENTIALS_ID}", inventoryContent: "[web]\n${WEB_INSTANCE_IP} ansibel_user=ansible\n", hosts: 'web', module: 'file', moduleArguments: 'path=/home/ansible/build/ state=directory', hostKeyChecking: false
                 ansibleAdhoc credentialsId: "${ANSIBLE_CREDENTIALS_ID}", inventoryContent: "[web]\n${WEB_INSTANCE_IP} ansibel_user=ansible\n", hosts: 'web', module: 'copy', moduleArguments: 'src=app.zip dest=/home/ansible/build/app.zip'
